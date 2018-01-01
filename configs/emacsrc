@@ -1,0 +1,47 @@
+(require 'package)
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(package-archives
+   (quote
+    (("gnu" . "http://elpa.gnu.org/packages/")
+("melpa-stable" . "http://stable.melpa.org/packages/")))))
+
+;; Hide splash-screen and startup-message
+(setq inhibit-splash-screen t)
+(setq inhibit-startup-message t)
+
+(add-hook 'isearch-update-post-hook 'redraw-display)
+
+(add-to-list 'load-path "/repos/tidal")
+(add-to-list 'load-path "/work")
+(require 'haskell-mode)
+(require 'tidal)
+
+(add-hook 'haskell-mode-hook 'turn-on-haskell-indentation)
+
+(find-file "~/init.tidal")
+
+(fset 'stidal
+"\C-c\C-s")
+
+(fset 'splay
+"\C-c\C-c")
+
+(execute-kbd-macro (symbol-function 'stidal))
+
+(find-file "~/hello.tidal")
+
+(delete-other-windows)
+
+(defun sseek ()
+  (interactive)
+  (with-no-warnings
+    (goto-line 2)))
+
+(sseek)
+
+(sleep-for 5)
+(execute-kbd-macro (symbol-function 'splay))
