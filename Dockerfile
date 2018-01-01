@@ -1,6 +1,6 @@
 FROM ubuntu
 
-MAINTINER Eric Fairbanks <ericpfairbanks@gmail.com>
+MAINTAINER Eric Fairbanks <ericpfairbanks@gmail.com>
 
 RUN apt-get update
 RUN DEBIAN_FRONTEND='noninteractive' apt-get -y install build-essential jackd supercollider xvfb git yasm supervisor libsndfile1-dev libsamplerate0-dev liblo-dev libasound2-dev libjack-dev libjack0 wget ghc emacs-nox haskell-mode zlib1g-dev xz-utils htop screen openssh-server
