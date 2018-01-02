@@ -36,7 +36,7 @@ RUN rm -fr ffmpeg
 COPY configs/tidebox.ini /etc/supervisor/conf.d/tidebox.conf
 
 # Initialize and configure sshd
-RUN rm /etc/ssh|ssh_host_key
+RUN rm /etc/ssh/ssh_host_key
 RUN rm /etc/ssh/ssh_host_rsa_key
 RUN rm /etc/ssh/ssh_host_dsa_key
 RUN ssh-keygen -b 1024 -t rsa -f /etc/ssh/ssh_host_key
