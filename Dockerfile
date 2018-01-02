@@ -2,8 +2,16 @@ FROM ubuntu
 
 MAINTAINER Eric Fairbanks <ericpfairbanks@gmail.com>
 
+# Install dependencies and audio tools
 RUN apt-get update
-RUN DEBIAN_FRONTEND='noninteractive' apt-get -y install build-essential jackd supercollider xvfb git yasm supervisor libsndfile1-dev libsamplerate0-dev liblo-dev libasound2-dev libjack-dev libjack0 wget ghc emacs-nox haskell-mode zlib1g-dev xz-utils htop screen openssh-server
+RUN DEBIAN_FRONTEND='noninteractive' apt-get -y install build-essential jackd supercollider xvfb git yasm supervisor libsndfile1-dev libsamplerate0-dev liblo-dev libasound2-dev libjack-dev libjack0 wget ghc emacs-nox haskell-mode zlib1g-dev xz-utils htop screen openssh-server cabal-install curl sudo
+RUN apt-get -y install zsh
+
+# Build Dirt synth
+WORKDIR /repos
+RUN git clone --recursive https://github.com/tidalcycles/Dirt.git
+WORKDIR Dirt
+RUN make
 
 # Build & Install libmp3lame
 WORKDIR /repos
@@ -24,7 +32,14 @@ WORKDIR /repos
 RUN rm -fr ffmpeg
 
 # Install Tidebox supervisord config
-COPY configs/tidebox.ini /etc/supervisord.d/tidebox.ini
+#COPY configs/tidebox.ini /etc/supervisord.d/tidebox.ini
+COPY configs/tidebox.ini /etc/supervisor/conf.d/tidebox.conf
+
+# Initialize and configure sshd
+RUN ssh-keygen -b 1024 -t rsa -f /etc/ssh/ssh_host_key
+RUN ssh-keygen -b 1024 -t rsa -f /etc/ssh/ssh_host_rsa_key
+RUN ssh-keygen -b 1024 -t dsa -f /etc/ssh/ssh_host_dsa_key
+RUN sed -i 's/UsePAM\syes/UsePAM no/' /etc/ssh/sshd_config
 
 # Expose sshd service
 EXPOSE 22
@@ -48,15 +63,21 @@ USER tidal
 ENV HOME /home/tidal
 WORKDIR /home/tidal
 
-RUN ln -s /repos /home/tidal/repos
-RUN ln -s /work /home/tidal/work
+RUN sudo ln -s /repos /home/tidal/repos
+RUN sudo ln -s /work /home/tidal/work
+RUN sudo chmod 600 /repos
+RUN sudo chmod -R 777 /home/tidal
+#RUN sudo chmod 600 /work
 
 # Install tidal
 RUN cabal update
 RUN cabal install tidal
 
+#ENV TERM xterm
+
 # Install Oh-My-Zsh
-RUN sh -c "$(curl -fsSL https://raw.github.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
+RUN curl -OL https://github.com/robbyrussell/oh-my-zsh/raw/master/tools/install.sh
+RUN bash install.sh
 
 # Disable Zsh automatic window titling
 RUN sed -i 's/# DISABLE_AUTO_TITLE="true"/DISABLE_AUTO_TITLE="true"/g' /home/tidal/.zshrc
@@ -82,7 +103,7 @@ COPY configs/sshconfig /home/tidal/.ssh/config
 RUN sudo chmod 600 /home/tidal/.ssh/config
 RUN sudo chown tidal.tidal /home/tidal/.ssh/config
 RUN ssh-keyscan -H github.com >> ~/.ssh/known_hosts
-RUN git clone git@github.com:DoubleDensity/scratchpool.git
+RUN git clone https://github.com/DoubleDensity/scratchpool.git
 WORKDIR /work/scratchpool
 RUN git config user.name "Tidebox User"
 RUN git config user.email "tidal@jankycloud.com"
