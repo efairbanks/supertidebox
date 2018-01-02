@@ -7,7 +7,6 @@ RUN apt-get update
 RUN apt-get -y install jackd
 RUN DEBIAN_FRONTEND='noninteractive' apt-get -y install build-essential supercollider xvfb git yasm supervisor libsndfile1-dev libsamplerate0-dev liblo-dev libasound2-dev wget ghc emacs-nox haskell-mode zlib1g-dev xz-utils htop screen openssh-server cabal-install curl sudo
 RUN apt-get -y install zsh
-RUN apt-get -y install libjack-jackd2-dev
 
 # Build Dirt synth
 WORKDIR /repos
