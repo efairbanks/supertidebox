@@ -4,7 +4,7 @@ MAINTAINER Eric Fairbanks <ericpfairbanks@gmail.com>
 
 # Install dependencies and audio tools
 RUN apt-get update
-RUN DEBIAN_FRONTEND='noninteractive' apt-get -y install build-essential jackd supercollider xvfb git yasm supervisor libsndfile1-dev libsamplerate0-dev liblo-dev libasound2-dev libjack-dev libjack0 wget ghc emacs-nox haskell-mode zlib1g-dev xz-utils htop screen openssh-server cabal-install curl sudo
+RUN DEBIAN_FRONTEND='noninteractive' apt-get -y install build-essential supercollider xvfb git yasm supervisor libsndfile1-dev libsamplerate0-dev liblo-dev libasound2-dev wget ghc emacs-nox haskell-mode zlib1g-dev xz-utils htop screen openssh-server cabal-install curl sudo libjack-jackd2-0 libjack-jackd2-dev jackd2
 RUN apt-get -y install zsh
 
 # Build Dirt synth
@@ -36,9 +36,9 @@ RUN rm -fr ffmpeg
 COPY configs/tidebox.ini /etc/supervisor/conf.d/tidebox.conf
 
 # Initialize and configure sshd
-RUN rm /etc/ssh/ssh_host_key
-RUN rm /etc/ssh/ssh_host_rsa_key
-RUN rm /etc/ssh/ssh_host_dsa_key
+RUN rm -f /etc/ssh/ssh_host_key
+RUN rm -f /etc/ssh/ssh_host_rsa_key
+RUN rm -f /etc/ssh/ssh_host_dsa_key
 RUN ssh-keygen -b 1024 -t rsa -f /etc/ssh/ssh_host_key
 RUN ssh-keygen -b 1024 -t rsa -f /etc/ssh/ssh_host_rsa_key
 RUN ssh-keygen -b 1024 -t dsa -f /etc/ssh/ssh_host_dsa_key
@@ -116,5 +116,7 @@ USER root
 RUN echo "/usr/bin/screen" >> /etc/shells
 RUN usermod -s /usr/bin/screen tidal
 RUN chown -R tidal.tidal /home/tidal/*.tidal
+
+EXPOSE 57120
 
 CMD ["/usr/bin/supervisord"]
