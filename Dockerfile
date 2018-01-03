@@ -4,9 +4,14 @@ MAINTAINER Eric Fairbanks <ericpfairbanks@gmail.com>
 
 # Install dependencies and audio tools
 RUN apt-get update
+
+# Install jackd by itself first without extras since installing alongside other tools seems to cause problems
 RUN apt-get -y install jackd
+
+# Install pretty much everything we need here
 RUN DEBIAN_FRONTEND='noninteractive' apt-get -y install build-essential supercollider xvfb git yasm supervisor libsndfile1-dev libsamplerate0-dev liblo-dev libasound2-dev wget ghc emacs-nox haskell-mode zlib1g-dev xz-utils htop screen openssh-server cabal-install curl sudo
-RUN apt-get -y install zsh
+
+# Install jack libs last
 RUN apt-get -y install libjack-jackd2-dev
 
 # Build Dirt synth
@@ -33,18 +38,13 @@ RUN make install
 WORKDIR /repos
 RUN rm -fr ffmpeg
 
-# Install Tidebox supervisord config
-#COPY configs/tidebox.ini /etc/supervisord.d/tidebox.ini
-COPY configs/tidebox.ini /etc/supervisor/conf.d/tidebox.conf
-
 # Initialize and configure sshd
-RUN rm -f /etc/ssh/ssh_host_key
-RUN rm -f /etc/ssh/ssh_host_rsa_key
-RUN rm -f /etc/ssh/ssh_host_dsa_key
-RUN ssh-keygen -b 1024 -t rsa -f /etc/ssh/ssh_host_key
-RUN ssh-keygen -b 1024 -t rsa -f /etc/ssh/ssh_host_rsa_key
-RUN ssh-keygen -b 1024 -t dsa -f /etc/ssh/ssh_host_dsa_key
-RUN sed -i 's/UsePAM\syes/UsePAM no/' /etc/ssh/sshd_config
+RUN mkdir /var/run/sshd
+RUN echo 'root:algorave' | chpasswd
+RUN sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+
+# SSH login fix. Otherwise user is kicked off after login
+RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd
 
 # Expose sshd service
 EXPOSE 22
@@ -58,34 +58,15 @@ WORKDIR /repos
 WORKDIR tidal
 RUN wget https://raw.github.com/yaxu/Tidal/master/tidal.el
 
-# Create and configure Tidal user
-RUN useradd tidal -s /bin/zsh
-RUN echo 'tidal:livecoding' | chpasswd
-RUN echo "tidal ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
-
-USER tidal
-
 ENV HOME /home/tidal
 WORKDIR /home/tidal
 
-RUN sudo ln -s /repos /home/tidal/repos
-RUN sudo ln -s /work /home/tidal/work
-RUN sudo chmod 600 /repos
-RUN sudo chmod -R 777 /home/tidal
-#RUN sudo chmod 600 /work
+RUN ln -s /repos /home/tidal/repos
+RUN ln -s /work /home/tidal/work
 
 # Install tidal
 RUN cabal update
 RUN cabal install tidal
-
-#ENV TERM xterm
-
-# Install Oh-My-Zsh
-RUN curl -OL https://github.com/robbyrussell/oh-my-zsh/raw/master/tools/install.sh
-RUN bash install.sh
-
-# Disable Zsh automatic window titling
-RUN sed -i 's/# DISABLE_AUTO_TITLE="true"/DISABLE_AUTO_TITLE="true"/g' /home/tidal/.zshrc
 
 # Install default configurations
 COPY configs/emacsrc /home/tidal/.emacs
@@ -98,27 +79,20 @@ COPY tidal/hello.tidal /home/tidal/hello.tidal
 
 # Prepare scratch workspace for version control
 RUN sudo mkdir /work
-RUN sudo chown -R tidal:tidal /work
 WORKDIR /work
 RUN mkdir /home/tidal/.ssh
 ADD https://raw.githubusercontent.com/DoubleDensity/scratchpool/master/id_rsa-scratchpool /home/tidal/.ssh/id_rsa
-RUN sudo chmod 600 /home/tidal/.ssh/id_rsa
-RUN sudo chown tidal.tidal /home/tidal/.ssh/id_rsa
 COPY configs/sshconfig /home/tidal/.ssh/config
-RUN sudo chmod 600 /home/tidal/.ssh/config
-RUN sudo chown tidal.tidal /home/tidal/.ssh/config
 RUN ssh-keyscan -H github.com >> ~/.ssh/known_hosts
 RUN git clone https://github.com/DoubleDensity/scratchpool.git
 WORKDIR /work/scratchpool
-RUN git config user.name "Tidebox User"
-RUN git config user.email "tidal@jankycloud.com"
+RUN git config user.name "SuperTidebox User"
+RUN git config user.email "supertidal@jankycloud.com"
 
-# Set Tidal shell to Screen
-USER root
-RUN echo "/usr/bin/screen" >> /etc/shells
-RUN usermod -s /usr/bin/screen tidal
-RUN chown -R tidal.tidal /home/tidal/*.tidal
+# Install Tidebox supervisord config
+COPY configs/tidebox.ini /etc/supervisor/conf.d/tidebox.conf
 
-EXPOSE 57120
+# Copy sclang startup file
+COPY configs/sclang.sc /root/.sclang.sc
 
 CMD ["/usr/bin/supervisord"]
