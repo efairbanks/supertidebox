@@ -1,4 +1,4 @@
 -- default test rhythm to verify stream connectivity; should start within 10 seconds
-c1 $ stack [sound "bd sn:2" , sound "casio:2 casio:1 house:2*1"]
+
 
 hush

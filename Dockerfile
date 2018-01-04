@@ -56,33 +56,40 @@ EXPOSE 8090
 RUN mkdir /repos/tidal
 WORKDIR /repos
 WORKDIR tidal
-RUN wget https://raw.github.com/yaxu/Tidal/master/tidal.el
+RUN wget https://raw.githubusercontent.com/tidalcycles/Tidal/master/tidal.el
 
-ENV HOME /home/tidal
-WORKDIR /home/tidal
+ENV HOME /root
+WORKDIR /root
 
-RUN ln -s /repos /home/tidal/repos
-RUN ln -s /work /home/tidal/work
+RUN ln -s /repos /root/repos
+RUN ln -s /work /root/work
 
 # Install tidal
 RUN cabal update
 RUN cabal install tidal
 
+# Install supercollider plugins
+WORKDIR /usr/share/SuperCollider/Extensions
+RUN git clone https://github.com/musikinformatik/SuperDirt
+RUN git clone https://github.com/tidalcycles/Dirt-Samples
+RUN git clone https://github.com/supercollider-quarks/Vowel
+
+
 # Install default configurations
-COPY configs/emacsrc /home/tidal/.emacs
-COPY configs/screenrc /home/tidal/.screenrc
-COPY configs/ffserver.conf /home/tidal/ffserver.conf
+COPY configs/emacsrc /root/.emacs
+COPY configs/screenrc /root/.screenrc
+COPY configs/ffserver.conf /root/ffserver.conf
 
 # Install default Tidal files
-COPY tidal/init.tidal /home/tidal/init.tidal
-COPY tidal/hello.tidal /home/tidal/hello.tidal
+COPY tidal/init.tidal /root/init.tidal
+COPY tidal/hello.tidal /root/hello.tidal
 
 # Prepare scratch workspace for version control
 RUN sudo mkdir /work
 WORKDIR /work
-RUN mkdir /home/tidal/.ssh
-ADD https://raw.githubusercontent.com/DoubleDensity/scratchpool/master/id_rsa-scratchpool /home/tidal/.ssh/id_rsa
-COPY configs/sshconfig /home/tidal/.ssh/config
+RUN mkdir /root/.ssh
+ADD https://raw.githubusercontent.com/DoubleDensity/scratchpool/master/id_rsa-scratchpool /root/.ssh/id_rsa
+COPY configs/sshconfig /root/.ssh/config
 RUN ssh-keyscan -H github.com >> ~/.ssh/known_hosts
 RUN git clone https://github.com/DoubleDensity/scratchpool.git
 WORKDIR /work/scratchpool
@@ -92,7 +99,12 @@ RUN git config user.email "supertidal@jankycloud.com"
 # Install Tidebox supervisord config
 COPY configs/tidebox.ini /etc/supervisor/conf.d/tidebox.conf
 
-# Copy sclang startup file
-COPY configs/sclang.sc /root/.sclang.sc
+# Copy supercollider/superdirt startup file
+COPY configs/startup.scd /root/.sclang.sc
+#COPY configs/startup.scd /root/.local/share/SuperCollider/startup.scd
+
+# set root shell to screen
+RUN echo "/usr/bin/screen" >> /etc/shells
+RUN usermod -s /usr/bin/screen root
 
 CMD ["/usr/bin/supervisord"]
