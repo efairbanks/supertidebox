@@ -18,11 +18,15 @@ For an example of the types of patterns and techniques which are possible in Tid
 
 [SuperDirt](https://github.com/musikinformatik/SuperDirt) is a drop-in replacement for the classic OSC-controlled Tidal sampler [Dirt](https://github.com/tidalcycles/Dirt). It runs inside the multimedia live coding framework known as [SuperCollider](https://github.com/supercollider/supercollider).
 
-SuperCollider has a long history of being integrated into other projects because its synthesis engine, known as `scsynth`, is incredibly powerful and hyper efficient. The integration of SuperCollider into Tidal makes it possible to combine powerful, custom-built effects and softsynths with the flexibilty and efficiency of the Dirt sampler. Moving from Dirt to SuperDirt is like going from recording with a 4-track tape recorder to a modern DAW, except that in this case you can build your own features.
+SuperCollider has a long history of being integrated into other projects because its synthesis engine, known as `scsynth`, is incredibly powerful and hyper efficient. The integration of SuperCollider into Tidal makes it possible to combine powerful, custom-built effects and softsynths with the flexibilty and efficiency of the Dirt sampler.
+
+Moving from Dirt to SuperDirt is like going from recording with a 4-track to a modern DAW, except that in this case you can build your own features and instruments.
 
 ## Why SuperTidebox?
 
-In early 2016, [Buttetsu Batou A.K.A. DoubleDensity](https://github.com/DoubleDensity) created Tidebox as no-fuss way for people to spin up a working environment for playing with Tidal. No pesky building tools from source, no hardware requirements, and no fussing with application startup. Since then, a large portion of the community has moved from using Tidal with the classic Dirt sampler to SuperDirt for the aforementioned reasons. I was hoping to simply fork Tidebox and make a pull request, but I could not get SuperCollider to cooperate on Fedora, so here we are. SuperTidebox is _(for the moment)_ as close to being a 1:1 Tidebox-like experience as I could manage, but on Ubuntu and with SuperDirt.
+In early 2016, [Buttetsu Batou A.K.A. DoubleDensity](https://github.com/DoubleDensity) created Tidebox as no-fuss way for people to spin up a working environment for playing with Tidal. No pesky building tools from source, no hardware requirements, and no fussing with application startup. Since then, a large portion of the community has moved from using Tidal with the classic Dirt sampler to SuperDirt for the aforementioned reasons.
+
+I was hoping to simply fork Tidebox and make a pull request, but I could not get SuperCollider to cooperate on Fedora, so here we are. SuperTidebox is _(for the moment)_ as close to being a 1:1 Tidebox-like experience as I could manage, but on Ubuntu and with SuperDirt.
 
 ## Getting started
 
