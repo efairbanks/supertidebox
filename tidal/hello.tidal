@@ -1,3 +1,4 @@
 -- default test rhythm to verify stream connectivity; should start within 10 seconds
+d1 $ stut 2 (1/3) (-1/4) $ slow 2 $ stack [s "[bd*4, 808:1(5,16,4), 808:5(7,16,6), hh*8]", n "0(5,8,2)" # s "plucklead" |-| n 30 |*| gain 1.14 |+| n "<0 3 -2>"]
 
 hush

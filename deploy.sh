@@ -1,3 +1,3 @@
-./build.sh
 ./destroy.sh
+./build.sh
 ./run.sh
