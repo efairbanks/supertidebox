@@ -9,7 +9,7 @@ RUN apt-get update
 RUN apt-get -y install jackd
 
 # Install pretty much everything we need here
-RUN DEBIAN_FRONTEND='noninteractive' apt-get -y install build-essential supercollider xvfb git yasm supervisor libsndfile1-dev libsamplerate0-dev liblo-dev libasound2-dev wget ghc emacs-nox haskell-mode zlib1g-dev xz-utils htop screen openssh-server cabal-install curl sudo
+RUN DEBIAN_FRONTEND='noninteractive' apt-get -y install build-essential xvfb git yasm supervisor libsndfile1-dev libsamplerate0-dev liblo-dev libasound2-dev wget ghc emacs-nox haskell-mode zlib1g-dev xz-utils htop screen openssh-server cabal-install curl sudo
 
 # Install jack libs last
 RUN apt-get -y install libjack-jackd2-dev
@@ -68,12 +68,25 @@ RUN ln -s /work /root/work
 RUN cabal update
 RUN cabal install tidal
 
+# build and install supercollider
+RUN apt-get update
+RUN apt-get -y install cmake build-essential libjack-jackd2-dev libsndfile1-dev libasound2-dev libavahi-client-dev libicu-dev libreadline6-dev libfftw3-dev libxt-dev libudev-dev libcwiid-dev pkg-config qt5-default qt5-qmake qttools5-dev qttools5-dev-tools qtdeclarative5-dev libqt5webkit5-dev qtpositioning5-dev libqt5sensors5-dev libqt5opengl5-dev
+WORKDIR /repos
+RUN git clone https://github.com/supercollider/supercollider.git
+WORKDIR /repos/supercollider
+RUN git submodule init && git submodule update
+RUN mkdir /repos/supercollider/build
+WORKDIR /repos/supercollider/build
+RUN cmake -DCMAKE_PREFIX_PATH=/usr/lib/x86_64-linux-gnu/qt5/ ..
+RUN make
+RUN make install
+RUN ldconfig
+
 # Install supercollider plugins
 WORKDIR /usr/share/SuperCollider/Extensions
 RUN git clone https://github.com/musikinformatik/SuperDirt
 RUN git clone https://github.com/tidalcycles/Dirt-Samples
 RUN git clone https://github.com/supercollider-quarks/Vowel
-
 
 # Install default configurations
 COPY configs/emacsrc /root/.emacs
