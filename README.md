@@ -44,6 +44,7 @@ I was hoping to simply fork Tidebox and make a pull request, but I could not get
 * `build.sh` builds the SuperTidebox image
 * `run.sh` runs the SuperTidebox image in a new container
 * `deploy.sh` runs the previous three helper scripts in order
+> *Note:* Any of the files included in `./config` or `./tidal` will be update in the image when you run `./build.sh` or `./deploy.sh`. Feel free to customize these to meet your needs.
 
 ## Tips & tricks
 
