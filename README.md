@@ -36,4 +36,4 @@ I was hoping to simply fork Tidebox and make a pull request, but I could not get
 4. `./deploy.sh`
 5. `ssh localhost -p 2222` _(password is *algorave*)_
 6. Navigate your browser to *localhost:8090*
-7. Jam out! _(`ctrl-C ctrl-C` executes line, `ctrl-C ctrl-E` executes block)_
+7. Jam out! _(`ctrl-C ctrl-C` executes line, `ctrl-C ctrl-E` executes block, `ctrl-A ,` and `ctrl-A .` cycle through windows, `ctrl-A D` disconnects)_
