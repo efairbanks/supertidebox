@@ -74,6 +74,7 @@ RUN apt-get -y install cmake build-essential libjack-jackd2-dev libsndfile1-dev 
 WORKDIR /repos
 RUN git clone https://github.com/supercollider/supercollider.git
 WORKDIR /repos/supercollider
+RUN git checkout 3.8
 RUN git submodule init && git submodule update
 RUN mkdir /repos/supercollider/build
 WORKDIR /repos/supercollider/build
@@ -112,9 +113,22 @@ RUN git config user.email "supertidal@jankycloud.com"
 # Install Tidebox supervisord config
 COPY configs/tidebox.ini /etc/supervisor/conf.d/tidebox.conf
 
-# Copy supercollider/superdirt startup file
+# Copy inital supercollider/superdirt startup file
+COPY configs/firststart.scd /root/.sclang.sc
+
+# Make dummy sclang_conf.yaml to force sclang to recompile class library
+RUN touch /root/sclang_conf.yaml
+
+# Install Quarks
+WORKDIR /root
+RUN xvfb-run sclang -l sclang_conf.yaml
+#RUN xvfb-run sclang -l sclang_conf.yaml
+
+# Copy permanent supercollider/superdirt startup file
 COPY configs/startup.scd /root/.sclang.sc
-#COPY configs/startup.scd /root/.local/share/SuperCollider/startup.scd
+
+# Make dummy sclang_conf.yaml to force sclang to recompile class library
+RUN touch /root/sclang_conf.yaml
 
 # set root shell to screen
 RUN echo "/usr/bin/screen" >> /etc/shells
