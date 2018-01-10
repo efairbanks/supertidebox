@@ -38,6 +38,13 @@ I was hoping to simply fork Tidebox and make a pull request, but I could not get
 6. Point your browser to [http://localhost:8090/stream.mp3](http://localhost:8090/stream.mp3)
 7. Jam out!
 
+## Utilities
+
+* `destroy.sh` destroys the last deployed instance of SuperTidebox
+* `build.sh` builds the SuperTidebox image
+* `run.sh` runs the SuperTidebox image in a new container
+* `deploy.sh` runs the previous three helper scripts in order
+
 ## Tips & tricks
 
 * When you ssh in, you will be placed in a customized [screen](https://www.gnu.org/software/screen/manual/screen.html) session
