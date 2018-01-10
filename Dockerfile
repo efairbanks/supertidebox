@@ -31,7 +31,7 @@ RUN rm -fr lame
 
 # Build & Install ffmpeg, ffserver
 WORKDIR /repos
-RUN git clone git://source.ffmpeg.org/ffmpeg.git ffmpeg
+RUN git clone https://github.com/efairbanks/FFmpeg.git ffmpeg
 WORKDIR ffmpeg
 RUN ./configure --enable-indev=jack --enable-libjack --enable-libmp3lame --enable-nonfree --prefix=/usr
 RUN make install
