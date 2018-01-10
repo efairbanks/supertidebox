@@ -4,6 +4,11 @@ SuperTidebox is based on Buttetsu Batou's [Tidebox](https://github.com/DoubleDen
 
 > A complete Tidal musical live coding and audio streaming environment inside Docker _(now with SuperDirt!)_
 
+## First, the obligatory video demonstration
+
+[![A video demonstrating SuperTidebox usage.](https://img.youtube.com/vi/vrvNYqQNZfI/0.jpg)](https://www.youtube.com/watch?v=vrvNYqQNZfI)
+
+
 ## What is Tidal?
 
 According to the official [homepage](http://tidal.lurk.org):
@@ -37,10 +42,6 @@ I was hoping to simply fork Tidebox and make a pull request, but I could not get
 5. `ssh localhost -p 2222` _(password is *algorave*)_
 6. Point your browser to [http://localhost:8090/stream.mp3](http://localhost:8090/stream.mp3)
 7. Jam out!
-
-## Obligatory video demonstration
-
-[![A video demonstrating SuperTidebox usage.](https://img.youtube.com/vi/vrvNYqQNZfI/0.jpg)](https://www.youtube.com/watch?v=vrvNYqQNZfI)
 
 ## Utilities
 
