@@ -35,7 +35,7 @@ I was hoping to simply fork Tidebox and make a pull request, but I could not get
 3. `cd supertidebox`
 4. `./deploy.sh`
 5. `ssh localhost -p 2222` _(password is *algorave*)_
-6. Point your browser to `http://localhost:8090/stream.mp3`
+6. Point your browser to [http://localhost:8090/stream.mp3](http://localhost:8090/stream.mp3)
 7. Jam out!
 
 ## Tips & tricks
