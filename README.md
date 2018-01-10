@@ -30,4 +30,10 @@ I was hoping to simply fork Tidebox and make a pull request, but I could not get
 
 ## Getting started
 
-Coming soon! 
+1. [Install docker](https://docs.docker.com/engine/installation/#supported-platforms)
+2. `git clone https://github.com/efairbanks/supertidebox.git`
+3. `cd supertidebox`
+4. `./deploy.sh`
+5. `ssh localhost -p 2222` _(password is *algorave*)_
+6. Navigate your browser to *localhost:8090*
+7. Jam out! _(`ctrl-C ctrl-C` executes line, `ctrl-C ctrl-E` executes block)_

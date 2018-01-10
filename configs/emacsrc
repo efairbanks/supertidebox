@@ -35,6 +35,12 @@
 (find-file "~/hello.tidal")
 
 (delete-other-windows)
+(split-window-below)
+(other-window 1)
+(switch-to-buffer "*tidal*")
+(other-window 1)
+(maximize-window)
+(shrink-window 10)
 
 (defun sseek ()
   (interactive)
