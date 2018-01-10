@@ -36,4 +36,20 @@ I was hoping to simply fork Tidebox and make a pull request, but I could not get
 4. `./deploy.sh`
 5. `ssh localhost -p 2222` _(password is *algorave*)_
 6. Navigate your browser to *localhost:8090*
-7. Jam out! _(`ctrl-C ctrl-C` executes line, `ctrl-C ctrl-E` executes block, `ctrl-A ,` and `ctrl-A .` cycle through windows, `ctrl-A D` disconnects)_
+7. Jam out!
+
+## Tips & tricks
+
+* When you ssh in, you will be placed in a customized [screen](https://www.gnu.org/software/screen/manual/screen.html) session
+* `ctrl-C ctrl-C` executes line
+* `ctrl-C ctrl-E` executes block
+* `ctrl-A ,` and `ctrl-A .` cycle through windows
+* `ctrl-A D` disconnects
+
+## Caveats
+
+* Sometimes, when building, sclang will have trouble pulling down SuperDirt. This may lead to a lack of audio, sclang errors, or a mysterious lack of audio. A pre-built version of supertidebox is currently in the works to circumvent this, but for the moment just rebuild and it should work.
+* Currently, jack and sclang are not cooperating with the version of docker that ships with Mac OS, and this is untested in Windows. If you are having consistent issues with jack or sclang starting, I recommend running docker in linux or in a linux VM. Investigations into these issues are underway.
+* FFMpeg dropped ffserver. This uses a forked copy of an older version of FFMpeg. This should be fine, but alternatives should be considered.
+* There's some latency when streaming over ffmpeg. It's gonna happen. If you fall too far out of sync, refresh the page.
+* This project is brand new. If you encounter issues, _*please*_ let me know about them. I want this to be useful to the community, not just me.
