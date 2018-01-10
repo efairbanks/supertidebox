@@ -23,6 +23,7 @@ select 5
 stuff "cd /work/scratchpool^M"
 select 0
 
+startup_message off
 altscreen off
 term screen-256color 
 bind ',' prev

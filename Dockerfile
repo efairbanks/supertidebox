@@ -9,7 +9,7 @@ RUN apt-get update
 RUN apt-get -y install jackd
 
 # Install pretty much everything we need here
-RUN DEBIAN_FRONTEND='noninteractive' apt-get -y install build-essential supercollider xvfb git yasm supervisor libsndfile1-dev libsamplerate0-dev liblo-dev libasound2-dev wget ghc emacs-nox haskell-mode zlib1g-dev xz-utils htop screen openssh-server cabal-install curl sudo
+RUN DEBIAN_FRONTEND='noninteractive' apt-get -y install build-essential xvfb git yasm supervisor libsndfile1-dev libsamplerate0-dev liblo-dev libasound2-dev wget ghc emacs-nox haskell-mode zlib1g-dev xz-utils htop screen openssh-server cabal-install curl sudo
 
 # Install jack libs last
 RUN apt-get -y install libjack-jackd2-dev
@@ -31,9 +31,9 @@ RUN rm -fr lame
 
 # Build & Install ffmpeg, ffserver
 WORKDIR /repos
-RUN git clone git://source.ffmpeg.org/ffmpeg.git ffmpeg
+RUN git clone https://github.com/efairbanks/FFmpeg.git ffmpeg
 WORKDIR ffmpeg
-RUN ./configure --enable-indev=jack --enable-libjack --enable-libmp3lame --enable-nonfree --prefix=/usr
+RUN ./configure --enable-indev=jack --enable-libmp3lame --enable-nonfree --prefix=/usr
 RUN make install
 WORKDIR /repos
 RUN rm -fr ffmpeg
@@ -68,12 +68,26 @@ RUN ln -s /work /root/work
 RUN cabal update
 RUN cabal install tidal
 
+# build and install supercollider
+RUN apt-get update
+RUN apt-get -y install cmake build-essential libjack-jackd2-dev libsndfile1-dev libasound2-dev libavahi-client-dev libicu-dev libreadline6-dev libfftw3-dev libxt-dev libudev-dev libcwiid-dev pkg-config qt5-default qt5-qmake qttools5-dev qttools5-dev-tools qtdeclarative5-dev libqt5webkit5-dev qtpositioning5-dev libqt5sensors5-dev libqt5opengl5-dev
+WORKDIR /repos
+RUN git clone https://github.com/supercollider/supercollider.git
+WORKDIR /repos/supercollider
+RUN git checkout 3.8
+RUN git submodule init && git submodule update
+RUN mkdir /repos/supercollider/build
+WORKDIR /repos/supercollider/build
+RUN cmake -DCMAKE_PREFIX_PATH=/usr/lib/x86_64-linux-gnu/qt5/ ..
+RUN make
+RUN make install
+RUN ldconfig
+
 # Install supercollider plugins
 WORKDIR /usr/share/SuperCollider/Extensions
 RUN git clone https://github.com/musikinformatik/SuperDirt
 RUN git clone https://github.com/tidalcycles/Dirt-Samples
 RUN git clone https://github.com/supercollider-quarks/Vowel
-
 
 # Install default configurations
 COPY configs/emacsrc /root/.emacs
@@ -99,9 +113,22 @@ RUN git config user.email "supertidal@jankycloud.com"
 # Install Tidebox supervisord config
 COPY configs/tidebox.ini /etc/supervisor/conf.d/tidebox.conf
 
-# Copy supercollider/superdirt startup file
+# Copy inital supercollider/superdirt startup file
+COPY configs/firststart.scd /root/.sclang.sc
+
+# Make dummy sclang_conf.yaml to force sclang to recompile class library
+RUN touch /root/sclang_conf.yaml
+
+# Install Quarks
+WORKDIR /root
+RUN xvfb-run sclang -l sclang_conf.yaml
+#RUN xvfb-run sclang -l sclang_conf.yaml
+
+# Copy permanent supercollider/superdirt startup file
 COPY configs/startup.scd /root/.sclang.sc
-#COPY configs/startup.scd /root/.local/share/SuperCollider/startup.scd
+
+# Make dummy sclang_conf.yaml to force sclang to recompile class library
+RUN touch /root/sclang_conf.yaml
 
 # set root shell to screen
 RUN echo "/usr/bin/screen" >> /etc/shells
