@@ -66,7 +66,7 @@ RUN ln -s /work /root/work
 
 # Install tidal
 RUN cabal update
-RUN cabal install tidal
+RUN cabal install tidal-0.9.6
 
 # build and install supercollider
 RUN apt-get update
