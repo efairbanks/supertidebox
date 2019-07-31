@@ -121,7 +121,7 @@ RUN touch /root/sclang_conf.yaml
 
 # Install Quarks
 WORKDIR /root
-RUN xvfb-run sclang -l sclang_conf.yaml
+RUN echo | xvfb-run sclang -l sclang_conf.yaml
 #RUN xvfb-run sclang -l sclang_conf.yaml
 
 # Copy permanent supercollider/superdirt startup file
