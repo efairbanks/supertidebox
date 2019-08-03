@@ -22,7 +22,7 @@
 
 (add-hook 'haskell-mode-hook 'turn-on-haskell-indentation)
 
-(find-file "~/init.tidal")
+(find-file "~/hello.tidal")
 
 (fset 'stidal
 "\C-c\C-s")
@@ -31,8 +31,6 @@
 "\C-c\C-c")
 
 (execute-kbd-macro (symbol-function 'stidal))
-
-(find-file "~/hello.tidal")
 
 (delete-other-windows)
 (split-window-below)

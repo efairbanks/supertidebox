@@ -2,7 +2,7 @@ defshell -bash
 
 screen -t tidal
 select 0
-stuff "emacs^M"
+stuff "emacs --debug-init^M"
 screen -t jackd
 select 1
 stuff "tail -f ~/jackd.log^M"
