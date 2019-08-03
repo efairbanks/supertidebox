@@ -41,7 +41,7 @@ RUN rm -fr ffmpeg
 # Initialize and configure sshd
 RUN mkdir /var/run/sshd
 RUN echo 'root:algorave' | chpasswd
-RUN sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+RUN sed -i 's/.*PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
 
 # SSH login fix. Otherwise user is kicked off after login
 RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd
@@ -56,7 +56,8 @@ EXPOSE 8090
 RUN mkdir /repos/tidal
 WORKDIR /repos
 WORKDIR tidal
-RUN wget https://raw.githubusercontent.com/tidalcycles/Tidal/master/tidal.el
+# Pin to version around 1.3.0.
+RUN wget https://raw.githubusercontent.com/tidalcycles/Tidal/0f22cdb064455a354f7b9c31d9785da1617ef874/tidal.el
 
 ENV HOME /root
 WORKDIR /root
@@ -66,7 +67,7 @@ RUN ln -s /work /root/work
 
 # Install tidal
 RUN cabal update
-RUN cabal install tidal-0.9.6
+RUN cabal install tidal-1.3.0
 
 # build and install supercollider
 RUN apt-get update
@@ -95,7 +96,6 @@ COPY configs/screenrc /root/.screenrc
 COPY configs/ffserver.conf /root/ffserver.conf
 
 # Install default Tidal files
-COPY tidal/init.tidal /root/init.tidal
 COPY tidal/hello.tidal /root/hello.tidal
 
 # Prepare scratch workspace for version control
@@ -121,8 +121,12 @@ RUN touch /root/sclang_conf.yaml
 
 # Install Quarks
 WORKDIR /root
-RUN xvfb-run sclang -l sclang_conf.yaml
-#RUN xvfb-run sclang -l sclang_conf.yaml
+# "echo |" is a workaround for https://github.com/supercollider/supercollider/issues/2655.
+# Note: xvfb-run doesn't always clean up its X lock:
+# https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=932070, so force # it to
+# run on screen :1 (with -n 1), a ifferent screen from later xvfb-run (in
+# supervisord config).
+RUN echo | xvfb-run -n 1 sclang -l sclang_conf.yaml
 
 # Copy permanent supercollider/superdirt startup file
 COPY configs/startup.scd /root/.sclang.sc
@@ -133,5 +137,8 @@ RUN touch /root/sclang_conf.yaml
 # set root shell to screen
 RUN echo "/usr/bin/screen" >> /etc/shells
 RUN usermod -s /usr/bin/screen root
+
+# set: prompt-cont from BootTidal.hs doens't work in ghci for some reason.
+RUN sed -i '/prompt-cont/d' /root/.cabal/share/x86_64-linux-ghc-*/tidal-*/BootTidal.hs
 
 CMD ["/usr/bin/supervisord"]
