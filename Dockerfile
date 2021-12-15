@@ -1,16 +1,17 @@
 FROM ubuntu AS build-common
 
-RUN apt update
-RUN DEBIAN_FRONTEND="noninteractive" apt -y install \
-		git build-essential cmake yasm
+RUN apt update && DEBIAN_FRONTEND="noninteractive" apt -y install \
+		git build-essential cmake yasm \
+		&& rm -rf /var/lib/apt/lists/*
 
 
 # build supercollider
 FROM build-common AS supercollider
-RUN apt -y install \
+RUN apt update && DEBIAN_FRONTEND="noninteractive" apt -y install \
 	libjack-jackd2-dev libsndfile1-dev libasound2-dev libavahi-client-dev \
 	libicu-dev libreadline6-dev libfftw3-dev libxt-dev libudev-dev libcwiid-dev \
-	pkg-config
+	pkg-config \
+		&& rm -rf /var/lib/apt/lists/*
 WORKDIR /repos
 RUN git clone --depth=1 --branch=3.8 https://github.com/supercollider/supercollider.git
 WORKDIR /repos/supercollider
@@ -34,7 +35,9 @@ WORKDIR /repos
 RUN rm -fr lame
 
 # Build ffmpeg, ffserver
-RUN apt -y install libjack-jackd2-dev
+RUN apt update && DEBIAN_FRONTEND="noninteractive" apt -y install \
+	libjack-jackd2-dev \
+		&& rm -rf /var/lib/apt/lists/*
 WORKDIR /repos
 RUN git clone --depth 1 https://github.com/efairbanks/FFmpeg.git ffmpeg
 WORKDIR ffmpeg
@@ -43,7 +46,9 @@ RUN make -j 12
 
 
 FROM build-common AS cabal
-RUN apt -y install cabal-install
+RUN apt update && DEBIAN_FRONTEND="noninteractive" apt -y install \
+	cabal-install \
+		&& rm -rf /var/lib/apt/lists/*
 RUN cabal update
 RUN cabal install tidal-1.7.8
 
@@ -59,12 +64,12 @@ FROM build-common
 MAINTAINER Eric Fairbanks <ericpfairbanks@gmail.com>
 
 # Install dependencies and audio tools
-RUN DEBIAN_FRONTEND='noninteractive' \
-		apt-get -y install jackd xvfb \
+RUN apt update && DEBIAN_FRONTEND="noninteractive" apt -y install \
+		jackd xvfb \
 		supervisor libsndfile1-dev libsamplerate0-dev liblo-dev libasound2-dev \
 		wget ghc emacs-nox haskell-mode zlib1g-dev xz-utils htop screen \
-		openssh-server cabal-install curl sudo libjack-jackd2-dev libmp3lame0
-
+		openssh-server cabal-install libjack-jackd2-dev libmp3lame0 \
+		&& rm -rf /var/lib/apt/lists/*
 
 COPY --from=ffmpeg /repos/ffmpeg /repos/ffmpeg
 WORKDIR /repos/ffmpeg
@@ -108,7 +113,9 @@ COPY --from=cabal /root/.cabal /root/.cabal
 COPY --from=cabal /root/.ghc /root/.ghc
 
 COPY --from=supercollider /repos/supercollider /repos/supercollider
-RUN DEBIAN_FRONTEND="noninteractive" apt -y install libxt-dev libfftw3-dev libavahi-client-dev libudev-dev libreadline6-dev
+RUN DEBIAN_FRONTEND="noninteractive" apt update && DEBIAN_FRONTEND="noninteractive" apt -y install \
+		libxt-dev libfftw3-dev libavahi-client-dev libudev-dev libreadline6-dev \
+		&& rm -rf /var/lib/apt/lists/*
 WORKDIR /repos/supercollider/build
 RUN make install
 RUN ldconfig
