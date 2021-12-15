@@ -1,47 +1,85 @@
-FROM ubuntu
+FROM ubuntu AS build-common
 
-MAINTAINER Eric Fairbanks <ericpfairbanks@gmail.com>
+RUN apt update
+RUN DEBIAN_FRONTEND="noninteractive" apt -y install \
+		git build-essential cmake yasm
 
-# Install dependencies and audio tools
-RUN apt-get update
 
-# Install jackd by itself first without extras since installing alongside other tools seems to cause problems
-RUN apt-get -y install jackd
-
-# Install pretty much everything we need here
-RUN DEBIAN_FRONTEND='noninteractive' apt-get -y install build-essential xvfb git yasm supervisor libsndfile1-dev libsamplerate0-dev liblo-dev libasound2-dev wget ghc emacs-nox haskell-mode zlib1g-dev xz-utils htop screen openssh-server cabal-install curl sudo
-
-# Install jack libs last
-RUN apt-get -y install libjack-jackd2-dev
-
-# Build Dirt synth
+# build supercollider
+FROM build-common AS supercollider
+RUN apt -y install \
+	libjack-jackd2-dev libsndfile1-dev libasound2-dev libavahi-client-dev \
+	libicu-dev libreadline6-dev libfftw3-dev libxt-dev libudev-dev libcwiid-dev \
+	pkg-config
 WORKDIR /repos
-RUN git clone --recursive https://github.com/tidalcycles/Dirt.git
-WORKDIR Dirt
-RUN make
+RUN git clone --depth=1 --branch=3.8 https://github.com/supercollider/supercollider.git
+WORKDIR /repos/supercollider
+RUN git submodule init && git submodule update
+RUN mkdir /repos/supercollider/build
+WORKDIR /repos/supercollider/build
+RUN cmake -DCMAKE_PREFIX_PATH=/usr/lib/x86_64-linux-gnu/qt5/ \
+	-DCMAKE_BUILD_TYPE=Release -DNATIVE=ON -DSC_QT=OFF -DSC_IDE=OFF \
+	-DNO_X11=ON -DSC_EL=OFF ..
+RUN make -j12
 
+
+FROM build-common AS ffmpeg
 # Build & Install libmp3lame
 WORKDIR /repos
-RUN git clone https://github.com/rbrito/lame.git
+RUN git clone --depth=1 https://github.com/rbrito/lame.git
 WORKDIR lame
 RUN ./configure --prefix=/usr
-RUN make install
+RUN make -j 12 install
 WORKDIR /repos
 RUN rm -fr lame
 
-# Build & Install ffmpeg, ffserver
+# Build ffmpeg, ffserver
+RUN apt -y install libjack-jackd2-dev
 WORKDIR /repos
-RUN git clone https://github.com/efairbanks/FFmpeg.git ffmpeg
+RUN git clone --depth 1 https://github.com/efairbanks/FFmpeg.git ffmpeg
 WORKDIR ffmpeg
-RUN ./configure --enable-indev=jack --enable-libmp3lame --enable-nonfree --prefix=/usr
-RUN make install
+RUN ./configure --enable-indev=jack --enable-libmp3lame --enable-nonfree --prefix=/usr --disable-shared --enable-static
+RUN make -j 12
+
+
+FROM build-common AS cabal
+RUN apt -y install cabal-install
+RUN cabal update
+RUN cabal install tidal-1.7.8
+
+
+FROM build-common as quarks
 WORKDIR /repos
-RUN rm -fr ffmpeg
+RUN git clone --depth=1 https://github.com/musikinformatik/SuperDirt
+RUN git clone --depth=1 https://github.com/tidalcycles/Dirt-Samples
+RUN git clone --depth=1 https://github.com/supercollider-quarks/Vowel
+
+
+FROM build-common
+MAINTAINER Eric Fairbanks <ericpfairbanks@gmail.com>
+
+# Install dependencies and audio tools
+RUN DEBIAN_FRONTEND='noninteractive' \
+		apt-get -y install jackd xvfb \
+		supervisor libsndfile1-dev libsamplerate0-dev liblo-dev libasound2-dev \
+		wget ghc emacs-nox haskell-mode zlib1g-dev xz-utils htop screen \
+		openssh-server cabal-install curl sudo libjack-jackd2-dev libmp3lame0
+
+
+COPY --from=ffmpeg /repos/ffmpeg /repos/ffmpeg
+WORKDIR /repos/ffmpeg
+RUN make install
+
+#COPY --from=ffmpeg /repos/lame /repos/lame
+#WORKDIR /repos/lame
+#RUN make install
+
+RUN rm -fr ffmpeg # lame
 
 # Initialize and configure sshd
 RUN mkdir /var/run/sshd
 RUN echo 'root:algorave' | chpasswd
-RUN sed -i 's/.*PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
+RUN echo 'PermitRootLogin yes' >> /etc/ssh/sshd_config
 
 # SSH login fix. Otherwise user is kicked off after login
 RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd
@@ -66,29 +104,18 @@ RUN ln -s /repos /root/repos
 RUN ln -s /work /root/work
 
 # Install tidal
-RUN cabal update
-RUN cabal install tidal-1.3.0
+COPY --from=cabal /root/.cabal /root/.cabal
+COPY --from=cabal /root/.ghc /root/.ghc
 
-# build and install supercollider
-RUN apt-get update
-RUN apt-get -y install cmake build-essential libjack-jackd2-dev libsndfile1-dev libasound2-dev libavahi-client-dev libicu-dev libreadline6-dev libfftw3-dev libxt-dev libudev-dev libcwiid-dev pkg-config qt5-default qt5-qmake qttools5-dev qttools5-dev-tools qtdeclarative5-dev libqt5webkit5-dev qtpositioning5-dev libqt5sensors5-dev libqt5opengl5-dev
-WORKDIR /repos
-RUN git clone https://github.com/supercollider/supercollider.git
-WORKDIR /repos/supercollider
-RUN git checkout 3.8
-RUN git submodule init && git submodule update
-RUN mkdir /repos/supercollider/build
+COPY --from=supercollider /repos/supercollider /repos/supercollider
+RUN DEBIAN_FRONTEND="noninteractive" apt -y install libxt-dev libfftw3-dev libavahi-client-dev libudev-dev libreadline6-dev
 WORKDIR /repos/supercollider/build
-RUN cmake -DCMAKE_PREFIX_PATH=/usr/lib/x86_64-linux-gnu/qt5/ ..
-RUN make
 RUN make install
 RUN ldconfig
 
-# Install supercollider plugins
-WORKDIR /usr/share/SuperCollider/Extensions
-RUN git clone https://github.com/musikinformatik/SuperDirt
-RUN git clone https://github.com/tidalcycles/Dirt-Samples
-RUN git clone https://github.com/supercollider-quarks/Vowel
+# https://github.com/supercollider/supercollider/issues/2882#issuecomment-303006967
+RUN mv /usr/local/share/SuperCollider/SCClassLibrary/Common/GUI /usr/local/share/SuperCollider/SCClassLibrary/scide_scqt/GUI
+RUN mv /usr/local/share/SuperCollider/SCClassLibrary/JITLib/GUI /usr/local/share/SuperCollider/SCClassLibrary/scide_scqt/JITLibGUI
 
 # Install default configurations
 COPY configs/emacsrc /root/.emacs
@@ -99,16 +126,7 @@ COPY configs/ffserver.conf /root/ffserver.conf
 COPY tidal/hello.tidal /root/hello.tidal
 
 # Prepare scratch workspace for version control
-RUN sudo mkdir /work
-WORKDIR /work
-RUN mkdir /root/.ssh
-ADD https://raw.githubusercontent.com/DoubleDensity/scratchpool/master/id_rsa-scratchpool /root/.ssh/id_rsa
-COPY configs/sshconfig /root/.ssh/config
-RUN ssh-keyscan -H github.com >> ~/.ssh/known_hosts
-RUN git clone https://github.com/DoubleDensity/scratchpool.git
-WORKDIR /work/scratchpool
-RUN git config user.name "SuperTidebox User"
-RUN git config user.email "supertidal@jankycloud.com"
+RUN mkdir -p /work/scratchpool
 
 # Install Tidebox supervisord config
 COPY configs/tidebox.ini /etc/supervisor/conf.d/tidebox.conf
@@ -123,8 +141,8 @@ RUN touch /root/sclang_conf.yaml
 WORKDIR /root
 # "echo |" is a workaround for https://github.com/supercollider/supercollider/issues/2655.
 # Note: xvfb-run doesn't always clean up its X lock:
-# https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=932070, so force # it to
-# run on screen :1 (with -n 1), a ifferent screen from later xvfb-run (in
+# https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=932070, so force it to run
+# on screen :1 (with -n 1), a different screen from later xvfb-run (in
 # supervisord config).
 RUN echo | xvfb-run -n 1 sclang -l sclang_conf.yaml
 
@@ -137,8 +155,5 @@ RUN touch /root/sclang_conf.yaml
 # set root shell to screen
 RUN echo "/usr/bin/screen" >> /etc/shells
 RUN usermod -s /usr/bin/screen root
-
-# set: prompt-cont from BootTidal.hs doens't work in ghci for some reason.
-RUN sed -i '/prompt-cont/d' /root/.cabal/share/x86_64-linux-ghc-*/tidal-*/BootTidal.hs
 
 CMD ["/usr/bin/supervisord"]

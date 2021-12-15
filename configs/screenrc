@@ -9,9 +9,6 @@ stuff "tail -f ~/jackd.log^M"
 screen -t sclang
 select 2
 stuff "tail -f ~/sclang.log^M"
-#screen -t dirt
-#select 2
-#stuff "tail -f ~/dirt.log^M"
 screen -t ffserver
 select 3
 stuff "tail -f ~/ffserver.log^M"
