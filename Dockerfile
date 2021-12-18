@@ -12,7 +12,7 @@ RUN apt update && DEBIAN_FRONTEND="noninteractive" apt -y install \
     pkg-config \
         && rm -rf /var/lib/apt/lists/*
 WORKDIR /repos
-RUN git clone --depth=1 --branch=3.8 --recurse-submodules https://github.com/supercollider/supercollider.git \
+RUN git clone --depth=1 --branch=3.11 --recurse-submodules https://github.com/supercollider/supercollider.git \
     && rm -rf /repos/supercollider/.git \
     && mkdir -p /repos/supercollider/build \
     && cd /repos/supercollider/build \
@@ -20,6 +20,17 @@ RUN git clone --depth=1 --branch=3.8 --recurse-submodules https://github.com/sup
     -DCMAKE_BUILD_TYPE=Release -DNATIVE=ON -DSC_QT=OFF -DSC_IDE=OFF \
     -DNO_X11=ON -DSC_EL=OFF -DSC_ABLETON_LINK=OFF .. \
      && make -j12
+WORKDIR /repos
+RUN git clone --depth=1 --recursive --branch "Version-3.11.0" \
+    https://github.com/supercollider/sc3-plugins.git /repos/sc3-plugins \
+    && mkdir -p /repos/sc3-plugins/build \
+    && cd /repos/sc3-plugins/build \
+    && cmake -DCMAKE_PREFIX_PATH=/usr/lib/x86_64-linux-gnu/ \
+          -DCMAKE_INSTALL_PREFIX=/usr/local \
+          -DSC_PATH=/repos/supercollider/ \
+          -DBUILD_TESTING=OFF -DQUARKS=ON -DSUPERNOVA=ON .. \
+    && make -j12
+
 
 
 FROM build-common AS ffmpeg
@@ -96,9 +107,11 @@ WORKDIR /repos/supercollider/build
 RUN make install
 RUN ldconfig
 
-# https://github.com/supercollider/supercollider/issues/2882#issuecomment-303006967
-RUN mv /usr/local/share/SuperCollider/SCClassLibrary/Common/GUI /usr/local/share/SuperCollider/SCClassLibrary/scide_scqt/GUI
-RUN mv /usr/local/share/SuperCollider/SCClassLibrary/JITLib/GUI /usr/local/share/SuperCollider/SCClassLibrary/scide_scqt/JITLibGUI
+COPY --from=supercollider /repos/sc3-plugins /repos/sc3-plugins
+WORKDIR /repos/sc3-plugins/build
+RUN make install
+RUN ldconfig
+RUN mv /usr/local/share/SuperCollider/SC3plugins /usr/local/share/SuperCollider/Extensions/SC3plugins
 
 # Install default configurations
 COPY configs/emacsrc /root/.emacs
