@@ -32,7 +32,6 @@ RUN git clone --depth=1 --recursive --branch "Version-3.11.0" \
     && make -j12
 
 
-
 FROM build-common AS ffmpeg
 # Build ffmpeg, ffserver
 RUN apt update && DEBIAN_FRONTEND="noninteractive" apt -y install \
@@ -54,9 +53,21 @@ RUN git clone --depth=1 https://github.com/musikinformatik/SuperDirt \
     && git clone --depth=1 https://github.com/supercollider-quarks/Vowel
 
 
+FROM build-common as webssh2
+RUN apt update && DEBIAN_FRONTEND="noninteractive" apt -y install \
+        --no-install-recommends \
+        npm \
+        && rm -rf /var/lib/apt/lists/*
+WORKDIR /repos
+RUN git clone https://github.com/billchurch/webssh2.git \
+    && cd webssh2/app && git checkout 0.4.4 \
+    && npm install --production
+COPY configs/webssh_config.json /repos/webssh2/app/config.json
+
+
 FROM build-common
 RUN apt update && DEBIAN_FRONTEND="noninteractive" apt -y install \
-        jackd xvfb \
+        jackd xvfb npm nginx \
         supervisor libsndfile1-dev libsamplerate0-dev liblo-dev libasound2-dev \
         wget ghc emacs-nox haskell-mode zlib1g-dev xz-utils htop screen \
         openssh-server cabal-install libjack-jackd2-dev libmp3lame0 \
@@ -156,5 +167,17 @@ RUN touch /root/sclang_conf.yaml
 # set root shell to screen
 RUN echo "/usr/bin/screen" >> /etc/shells
 RUN usermod -s /usr/bin/screen root
+
+COPY --from=webssh2 /repos/webssh2 /repos/webssh2
+# Expose WebSSH2.
+EXPOSE 2222
+
+# Set up nginx reverse-proxy.
+COPY configs/nginx /etc/nginx/sites-available/reverse-proxy.conf
+COPY configs/index.html configs/howler.core.min.js /var/www/html/
+RUN rm /etc/nginx/sites-enabled/default \
+    && ln -s /etc/nginx/sites-available/reverse-proxy.conf \
+             /etc/nginx/sites-enabled/reverse-proxy.conf
+EXPOSE 80
 
 CMD ["/usr/bin/supervisord"]

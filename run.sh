@@ -1,1 +1,1 @@
-docker run -d -p 2222:22 -p 8090:8090 supertidebox
+docker run -it --rm -p 8080:80 parabolala/webtidebox:1

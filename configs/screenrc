@@ -15,8 +15,14 @@ stuff "tail -f ~/ffserver.log^M"
 screen -t ffmpeg
 select 4
 stuff "tail -f ~/ffmpeg.log^M"
-screen -t files
+screen -t webssh2
 select 5
+stuff "tail -f ~/webssh*^M"
+screen -t nginx
+select 6
+stuff "tail -f ~/nginx*^M"
+screen -t files
+select 6
 stuff "cd /work/scratchpool^M"
 select 0
 
