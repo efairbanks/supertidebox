@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Tidal in a tab</title>
+  </head>
+  <body style="margin: 0">
+    <script src="howler.core.min.js"></script>
+    <script type="text/javascript">
+      var url = "/mp3";
+      var sound = new Howl({
+        src: [url],
+        html5: true,
+      });
+      sound.play();
+    </script>
+    <iframe src="/ssh/host/127.0.0.1" style="width: 100vw; height: 100vh" />
+  </body>
+</html>

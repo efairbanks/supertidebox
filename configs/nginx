@@ -1,0 +1,19 @@
+# A reverse proxy config that maps:
+#  /ssh - to the local WebSSH2 pointed at localhost:22 SSH.
+#  /mp3 - to the ffmserver stream.
+#  / - a tiny HTML page that combines the two.
+
+server {
+    tcp_nodelay       on;
+    listen 80;
+    error_log /root/nginx.error.log;
+    access_log /root/nginx.access.log;
+
+    location /ssh {
+        proxy_pass http://localhost:2222/ssh;
+    }
+    location /mp3 {
+        proxy_pass http://localhost:8090/stream.mp3;
+    }
+    location / { alias /var/www/html/; }
+}

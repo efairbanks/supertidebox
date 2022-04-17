@@ -2,24 +2,27 @@ defshell -bash
 
 screen -t tidal
 select 0
-stuff "emacs^M"
+stuff "emacs --debug-init^M"
 screen -t jackd
 select 1
 stuff "tail -f ~/jackd.log^M"
 screen -t sclang
 select 2
 stuff "tail -f ~/sclang.log^M"
-#screen -t dirt
-#select 2
-#stuff "tail -f ~/dirt.log^M"
 screen -t ffserver
 select 3
 stuff "tail -f ~/ffserver.log^M"
 screen -t ffmpeg
 select 4
 stuff "tail -f ~/ffmpeg.log^M"
-screen -t files
+screen -t webssh2
 select 5
+stuff "tail -f ~/webssh*^M"
+screen -t nginx
+select 6
+stuff "tail -f ~/nginx*^M"
+screen -t files
+select 6
 stuff "cd /work/scratchpool^M"
 select 0
 
